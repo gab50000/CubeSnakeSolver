@@ -4,6 +4,7 @@ import numpy as np
 import ipdb
 
 start_cfg = "ddrddrdrrrdrrdrrdrrdrdrdrdrddrrdrdrdrrdddrdrdddrddrdrdrdrdrdddr"
+COUNTER = 0
 
 def make_matrix(cfg):
 	matrix = np.zeros((64, 64), int)
@@ -22,6 +23,7 @@ def make_matrix(cfg):
 	return matrix
 
 def continue_cube(cube, start_point, directionlist, cfg):	
+        global COUNTER
 	#find out length of new segment:
 	direction = directionlist[-1]
 	length = 0
@@ -51,7 +53,9 @@ def continue_cube(cube, start_point, directionlist, cfg):
 				#~ print directionlist
 				return False
 	
-	print "sum", cube.sum()
+        if COUNTER % 100 == 0:
+            print "sum {:2d}, counter: {:10d}".format(cube.sum(), COUNTER), "\r",
+        COUNTER += 1
 	if (cube == 1).all():
 		print "Found solution"
 		for d in directionlist:
