@@ -5,19 +5,6 @@ import ipdb
 
 start_cfg = "ddrddrdrrrdrrdrrdrrdrdrdrdrddrrdrdrdrrdddrdrdddrddrdrdrdrdrdddr"
 
-#~ def make_vector(cfg):
-	#~ vectors = []
-	#~ while len(cfg) > 0:
-		#~ vec = [0,0,0]
-		#~ direction = cfg[0]
-		#~ while cfg[0] == direction:
-			#~ if direction == 1:
-				#~ vec[0] -= 1
-			#~ elif direction == "r":
-				#~ vec[0] += 1
-			#~ elif 
-		#~ 
-
 def make_matrix(cfg):
 	matrix = np.zeros((64, 64), int)
 	matrix[0,0] = 1
@@ -38,10 +25,15 @@ def continue_cube(cube, start_point, directionlist, cfg):
 	#find out length of new segment:
 	direction = directionlist[-1]
 	length = 0
+	
+	if len(cfg) == 0:
+		return False
 	x = cfg[0]
 	while cfg[0] == x:
 		length += 1
 		cfg = cfg[1:]
+		if len(cfg) == 0:
+			break
 		
 	for i in xrange(1, length+1):
 		#~ ipdb.set_trace()
@@ -59,6 +51,7 @@ def continue_cube(cube, start_point, directionlist, cfg):
 				#~ print directionlist
 				return False
 	
+	print "sum", cube.sum()
 	if (cube == 1).all():
 		print "Found solution"
 		for d in directionlist:
@@ -72,38 +65,50 @@ def continue_cube(cube, start_point, directionlist, cfg):
 	for newdir in newdirs:
 		for i in [-1, 1]:
 			newlist = list(directionlist)
+			newcube = np.copy(cube)
 			arr = np.zeros(3, int)
 			arr[newdir] = i
 			newlist.append(arr)
-			if continue_cube(cube, new_startpoint, newlist, cfg) == True:
-				break
+			if continue_cube(newcube, new_startpoint, newlist, cfg) == True:
+				return True
+	return False
 			#~ dirs.append(arr)
+
 		
 	
 def make_cube(cfg):
 	directionlist = []
 	directionlist.append(np.array([1,0,0]))
-	cube = np.zeros((4,4,4), int)
 	
-	cube[0:3,0,0] = 1
-	direction = directionlist[-1]
-	new_startpoint = np.array([2,0,0])
-	cfg = cfg[2:]
+	#find startconfig
+	for x in xrange(4):
+		for y in xrange(4):
+			for z in xrange(4):
+				if x+2 < 4:
+					cube = np.zeros((4,4,4), int)
+					startpoint = np.array((x,y,z), int)
+					print "startpoint", startpoint
+					
+					for i in xrange(3):
+						cube[startpoint[0]+i, startpoint[1], startpoint[2]] = 1
+					direction = directionlist[-1]
+					new_startpoint = startpoint + (2,0,0)
+					cfg = cfg[2:]
 
-	newdirs = np.where(direction == 0)[0]
-	
-	for newdir in newdirs:
-		for i in [-1, 1]:
-			newlist = list(directionlist)
-			arr = np.zeros(3, int)
-			arr[newdir] = i
-			newlist.append(arr)
-			print "testing", arr
-			if continue_cube(cube, new_startpoint, newlist, cfg) == True:
-				break
-	
+					newdirs = np.where(direction == 0)[0]
+					
+					for newdir in newdirs:
+						for i in [-1, 1]:
+							newlist = list(directionlist)
+							arr = np.zeros(3, int)
+							arr[newdir] = i
+							newlist.append(arr)
+							newcube = np.copy(cube)
+							print "testing", arr
+							if continue_cube(newcube, new_startpoint, newlist, cfg) == True:
+								print "startpoint for solution", startpoint
+								break
 		
-	
 def find_hinges(cfg):
 	pass
 
