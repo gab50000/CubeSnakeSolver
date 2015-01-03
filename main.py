@@ -33,9 +33,41 @@ def make_matrix(cfg):
 		matrix[i,j] = 1
 	
 	return matrix
+	
+def still_solvable(cube, start_point):
+	#check if there is a part of the cube that still needs to be filled, but cannot be reached anymore
+	for i in xrange(1, cube.shape[0]-1):
+		if cube[i, :, :].all():
+			if start_point[0] > i:
+				for j in xrange(1, i):
+					if not cube[j, :, :].all():
+						return False
+			elif start_point[0] < i:
+				for j in xrange(i, cube.shape[0]-1):
+					if not cube[j, :, :].all():
+						return False
+		elif cube[:, i, :].all():
+			if start_point[1] > i:
+				for j in xrange(1, i):
+					if not cube[:, j, :].all():
+						return False
+			elif start_point[1] < i:
+				for j in xrange(i, cube.shape[0]-1):
+					if not cube[:, j, :].all():
+						return False
+		elif cube[:, :, i].all():
+			if start_point[2] > i:
+				for j in xrange(1, i):
+					if not cube[:, :, j].all():
+						return False
+			elif start_point[2] < i:
+				for j in xrange(i, cube.shape[0]-1):
+					if not cube[:, :, j].all():
+						return False
+	return True
 
-def continue_cube(cube, start_point, directionlist, cfg):	
-        global COUNTER
+def continue_cube(cube, start_point, directionlist, cfg, moves_remaining):	
+	global COUNTER
 	#find out length of new segment:
 	direction = directionlist[-1]
 	length = 0
@@ -48,31 +80,35 @@ def continue_cube(cube, start_point, directionlist, cfg):
 		cfg = cfg[1:]
 		if len(cfg) == 0:
 			break
-		
-	for i in xrange(1, length+1):
-		#~ ipdb.set_trace()
-		new_point = start_point + i*direction
-		if (new_point > 3).any() or (new_point < 0).any():
-			#~ print "not possible"
-			#~ print directionlist
-			return False
-		else:
+	
+	if still_solvable(cube, start_point):
+		for i in xrange(1, length+1):
 			#~ ipdb.set_trace()
-			if cube[new_point[0], new_point[1], new_point[2]] == 0:
-				cube[new_point[0], new_point[1], new_point[2]] = 1
-			else:
+			new_point = start_point + i*direction
+			if (new_point > 3).any() or (new_point < 0).any():
 				#~ print "not possible"
 				#~ print directionlist
 				return False
-	
-        if COUNTER % 100 == 0:
-            print "sum {:2d}, progress: {:.4%}".format(cube.sum(), float(COUNTER)/TOTAL_CONFIGS), "\r",
-        COUNTER += 1
-	if (cube == 1).all():
-		print "Found solution"
-		for d in directionlist:
-			print d
-		return True
+			else:
+				#~ ipdb.set_trace()
+				if cube[new_point[0], new_point[1], new_point[2]] == 0:
+					cube[new_point[0], new_point[1], new_point[2]] = 1
+				else:
+					#~ print "not possible"
+					#~ print directionlist
+					return False
+		
+			if COUNTER % 100 == 0:
+				print "sum {:2d}, progress: {:.4%}".format(cube.sum(), float(COUNTER)/TOTAL_CONFIGS), "\r",
+			COUNTER += 1
+		if (cube == 1).all():
+			print "Found solution"
+			for d in directionlist:
+				print d
+			return True
+	else:
+		print "not solvable anymore"
+		return False
 				
 	new_startpoint = start_point + length*direction
 
@@ -85,7 +121,7 @@ def continue_cube(cube, start_point, directionlist, cfg):
 			arr = np.zeros(3, int)
 			arr[newdir] = i
 			newlist.append(arr)
-			if continue_cube(newcube, new_startpoint, newlist, cfg) == True:
+			if continue_cube(newcube, new_startpoint, newlist, cfg, moves_remaining-1) == True:
 				return True
 	return False
 			#~ dirs.append(arr)
@@ -93,6 +129,7 @@ def make_cube(cfg):
 	directionlist = []
 	directionlist.append(np.array([1,0,0]))
 	
+	hinge_nr = count_hinges(cfg)
 	#find startconfig
 	for x in xrange(4):
 		for y in xrange(4):
@@ -118,7 +155,7 @@ def make_cube(cfg):
 							newlist.append(arr)
 							newcube = np.copy(cube)
 							print "testing", arr
-							if continue_cube(newcube, new_startpoint, newlist, cfg) == True:
+							if continue_cube(newcube, new_startpoint, newlist, cfg, moves_remaining=hinge_nr) == True:
 								print "startpoint for solution", startpoint
 								break
 		
