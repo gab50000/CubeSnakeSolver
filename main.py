@@ -6,6 +6,18 @@ import ipdb
 start_cfg = "ddrddrdrrrdrrdrrdrrdrdrdrdrddrrdrdrdrrdddrdrdddrddrdrdrdrdrdddr"
 COUNTER = 0
 
+def count_hinges(cfg):
+	hinge_counter = 0
+	x = cfg[0]
+	
+	for d in cfg:
+		if x != d:
+			hinge_counter += 1
+			x = d
+	return hinge_counter
+	
+TOTAL_CONFIGS = 4**count_hinges(start_cfg)
+
 def make_matrix(cfg):
 	matrix = np.zeros((64, 64), int)
 	matrix[0,0] = 1
@@ -54,7 +66,7 @@ def continue_cube(cube, start_point, directionlist, cfg):
 				return False
 	
         if COUNTER % 100 == 0:
-            print "sum {:2d}, counter: {:10d}".format(cube.sum(), COUNTER), "\r",
+            print "sum {:2d}, progress: {:.4%}".format(cube.sum(), float(COUNTER)/TOTAL_CONFIGS), "\r",
         COUNTER += 1
 	if (cube == 1).all():
 		print "Found solution"
@@ -77,9 +89,6 @@ def continue_cube(cube, start_point, directionlist, cfg):
 				return True
 	return False
 			#~ dirs.append(arr)
-
-		
-	
 def make_cube(cfg):
 	directionlist = []
 	directionlist.append(np.array([1,0,0]))
@@ -113,10 +122,13 @@ def make_cube(cfg):
 								print "startpoint for solution", startpoint
 								break
 		
-def find_hinges(cfg):
-	pass
+
+		
 
 def main(*args):
+	hinge_nr = count_hinges(start_cfg)
+	print "number of hinges: {}".format(hinge_nr)
+	print "possible configurations: {}".format(4**hinge_nr)
 	make_cube(start_cfg)
 
 if __name__ == '__main__':
