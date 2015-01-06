@@ -18,6 +18,23 @@ def count_hinges(cfg):
 	
 TOTAL_CONFIGS = 4**count_hinges(start_cfg)
 
+def userfriendly_output(numpy_direction):
+	if (numpy_direction == [1, 0, 0]).all():
+		return "x"
+	elif (numpy_direction == [-1, 0, 0]).all():
+		return "-x"
+	elif (numpy_direction == [0, 1, 0]).all():
+		return "y"
+	elif (numpy_direction == [0, -1, 0]).all():
+		return "-y"
+	elif (numpy_direction == [0, 0, 1]).all():
+		return "z"
+	elif (numpy_direction == [0, 0, -1]).all():
+		return "-z"
+	else:
+		raise ValueError("Not sure what to do with this input...")
+	
+
 def make_matrix(cfg):
 	matrix = np.zeros((64, 64), int)
 	matrix[0,0] = 1
@@ -36,6 +53,8 @@ def make_matrix(cfg):
 	
 def still_solvable(cube, start_point):
 	#check if there is a part of the cube that still needs to be filled, but cannot be reached anymore
+	#at the moment: check if there is a completely filled slice of the cube, which is between the current endpoint of the snake and an empty cube part
+	#better: check if there is no possible path from the endpoint to the empty part, but probably also more expensive...
 	for i in xrange(1, cube.shape[0]-1):
 		if cube[i, :, :].all():
 			if start_point[0] > i:
@@ -65,7 +84,7 @@ def still_solvable(cube, start_point):
 					if not cube[:, :, j].all():
 						return False
 	return True
-
+	
 def continue_cube(cube, start_point, directionlist, cfg, moves_remaining):	
 	global COUNTER
 	#find out length of new segment:
@@ -73,6 +92,7 @@ def continue_cube(cube, start_point, directionlist, cfg, moves_remaining):
 	length = 0
 	
 	if len(cfg) == 0:
+		COUNTER += 1
 		return False
 	x = cfg[0]
 	while cfg[0] == x:
@@ -88,6 +108,7 @@ def continue_cube(cube, start_point, directionlist, cfg, moves_remaining):
 			if (new_point > 3).any() or (new_point < 0).any():
 				#~ print "not possible"
 				#~ print directionlist
+				COUNTER += 4**(moves_remaining-1)
 				return False
 			else:
 				#~ ipdb.set_trace()
@@ -96,18 +117,20 @@ def continue_cube(cube, start_point, directionlist, cfg, moves_remaining):
 				else:
 					#~ print "not possible"
 					#~ print directionlist
+					COUNTER += 4**(moves_remaining-1)
 					return False
 		
 			if COUNTER % 100 == 0:
 				print "sum {:2d}, progress: {:.4%}".format(cube.sum(), float(COUNTER)/TOTAL_CONFIGS), "\r",
-			COUNTER += 1
+			#~ COUNTER += 1
 		if (cube == 1).all():
 			print "Found solution"
 			for d in directionlist:
 				print d
 			return True
 	else:
-		print "not solvable anymore"
+		#~ print "not solvable anymore"
+		COUNTER += 4**moves_remaining
 		return False
 				
 	new_startpoint = start_point + length*direction
